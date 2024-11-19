@@ -1,0 +1,62 @@
+172.16.0.0/16
+
+ECT Polo I
+LAN0 -> 110 hosts + 2 + 1 = 113 hosts
+de 172.16.0.0 até 172.16.0.127 /25
+
+LAN1 -> 100 hosts + 3 = 103         
+de 172.16.0.128 ate 172.16.0.255 /25
+
+ECT Polo II
+LAN0 -> 8 hosts + 3 = 11 hosts
+ 172.16.1.0 ate 172.16.1.15/28
+
+LAN1 -> 4 hosts + 3 = 7 hosts
+172.16.1.16 ate 172.16.1.23 /29
+
+DataCenter 
+Lan0-> 20 hosts + 3 = 23
+172.16.1.24 ate 172.16.1.55/27
+
+Rede entre R0 e R1 
+172.16.1.56 ate 172.16.1.59 /30
+
+Rede entre R0 e R1 
+172.16.1.60 ate 172.16.1.63 /30
+
+rede entre a cloud (provavelmente)
+172.16.1.64 ate 172.16.1.67 /30
+
+
+!R0
+en
+conf term
+hostname R0
+
+line console 0
+password cisco
+
+enable secret password
+
+end
+
+conf term
+int f0/0
+ip add 172.16.0.1 255.255.255.128
+no shut 
+exit
+
+int f0/1
+ip add 172.16.0.129 255.255.255.128
+no shut 
+end
+
+!configurar rip
+en
+conf term
+router rip
+version 2
+network 172.16.1.16
+network 172.16.1.0
+network 172.16.1.60
+exit

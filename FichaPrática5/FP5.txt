@@ -1,0 +1,88 @@
+!apagar configuracao do switch 
+erase start-up config
+reload
+
+!listar as interfaces do switch
+show ip interface brief 
+
+!modo configuracao
+configure terminal
+
+!alterar nome
+hostname S1
+
+!alterar password da consola 
+line console 0
+password cisco
+exit
+
+!ativar a password enable 
+enable secret class
+
+
+!criar as vlnas nos switch
+en
+conf term
+
+vlan 10
+name Alunos
+
+vlan 20
+name Docentes
+
+vlan 30
+name Funcionarios
+
+end
+
+!verificar a configuracao das vlans 
+show vlan brief 
+
+!configurar as portas de acesso e associa las as vlans
+configure terminal 
+interface range fa0/2 - 0/8
+switchport mode access
+switchport access vlan 10
+exit
+
+interface range fa0/9 - 0/16
+switchport mode access
+switchport access vlan 20
+exit
+
+interface range fa0/17 - 0/24
+switchport mode access
+switchport access vlan 30
+exit
+
+
+!analisar o resultado 
+show vlan brief
+
+
+!configurar as portas trunks para as vlans nos switchs
+interface f0/1
+switchport mode trunk
+switchport trunk native vlan 99
+switchport trunk allowed vlan all
+switchport trunk allowed vlan remove 1
+exit
+
+
+!configurar a interface vlan 99  para gestao no S1
+interface vlan 99
+ip add 172.17.99.21 255.255.255.0
+no shutdown
+exit
+
+!configurar a interface vlan 99  para gestao no S2
+interface vlan 99
+ip add 172.17.99.22 255.255.255.0
+no shutdown
+exit
+
+!verificar 
+show interface vlan 99
+
+!analisar a configuracao da interface trunk 
+show interface fa0/1 switchport

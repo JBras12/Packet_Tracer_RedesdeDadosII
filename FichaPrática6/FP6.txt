@@ -1,0 +1,129 @@
+Rede A
+100 + 3 = 103 hosts
+192.168.0.128 ate 192.168.0.255 255.255.255.0
+
+Rede C 
+95 + 3 = 93 hosts
+192.168.0.0 ate 192.168.0.127 255.255.255.0
+
+Rede B
+25 + 3 = 28 hosts
+192.168.1.0 ate 192.168.1.31 255.255.255.224
+
+Rede D
+20 + 3 = 23 hosts
+192.168.1.64 ate 192.168.1.63 255.255.255.224
+
+!Router0
+!apagar as configuracoes dos routers e reincia los
+erase startup-config
+reload
+
+!listar as interfaces 
+show ip interface brief
+
+!alterar nome
+enable 
+configure terminal
+hostname R0
+
+!password consola
+line console 0
+password cisco
+
+!password enable
+enable secret class
+
+!interfaces r0
+en
+conf term
+int Fa0/0 
+ip add 192.168.0.129 255.255.255.0
+no shut
+int Fa0/1 
+ip add 192.168.1.1 255.255.255.224
+no shut
+int se0/1/0
+ip add 192.168.1.253 255.255.255.252
+no shut
+end
+
+!interfaces r1
+en
+conf term
+int fa0/0
+ip add 192.168.0.1 255.255.255.0
+no shut
+int fa0/1 
+ip add 12.168.1.65 255.255.255.224
+no shut
+int se0/1/0
+ip add 192.168.1.254 255.255.255.252
+no shut
+end
+
+!ativar o ospf  R0
+en
+conf term
+router ospf 1
+network 192.168.1.252 0.0.0.3 area 0
+network 192.168.0.128 0.0.0.127 area 0
+network 192.168.1.0 0.0.0.31 area 0
+end
+
+!ativar ospf r1
+en
+conf term
+router ospf 1
+network 192.168.1.252 0.0.0.3 area 0
+network 192.168.1.64 0.0.0.31 area 0
+network 192.168.0.0 0.0.0.127 area 0
+end
+
+!-----
+!switches
+erase startup-config 
+reload
+
+en
+show ip interfaces brief
+
+
+en
+conf term
+hostname S0
+line console 0
+password cisco
+
+enable secret class
+exit
+
+
+vlan 10
+name RedeA
+
+vlan 20
+name RedeB
+
+vlan 99
+name Gestao
+
+interface range fa0/2-12
+switchport mode access
+switchport access vlan 10
+
+interface range fa0/13-24
+switchport mode access 
+switchport access vlan 20
+
+interface vlan 99
+ip add 194.168.1.1 255.255.255.248
+no shut
+exit
+
+int fa0/1
+switchport mode trunk
+switchport trunk allowed vlan 10,20,99
+switchport trunk native vlan 99
+end
+write memory

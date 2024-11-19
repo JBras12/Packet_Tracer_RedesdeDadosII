@@ -1,0 +1,82 @@
+10.0.0.0/8
+
+ECT Polo I 
+LAN0: 128 + 3 = 131 hosts
+10.0.0.0 ate 10.0.0.255  255.255.255.0
+LAN1: 100 + 3 = 103 hosts
+10.0.1.0 ate 10.0.1.127 255.255.255.128
+
+ECT Polo II
+LAN1: 70 + 3 = 73 hosts
+10.0.1.128 ate 10.0.1.255 255.255.255.128
+
+LAN0: 50 + 3 = 53 hosts
+10.0.2.0 ate 10.0.2.63 255.255.255.192
+
+Data Center
+LAN0: 20 + 3 = 23 hosts
+10.0.2.64 ate 10.0.2.95 255.255.255.224
+
+Rede Entre o Router 0 e 1
+10.0.2.96 ate 10.0.2.99 255.255.255.252
+
+Rede Entre o Router 1 e 2
+10.0.2.100 ate 10.0.2.103 255.255.255.252
+
+
+en
+show ip interface brief 
+configure terminal 
+
+hostname R0
+
+line console 0
+password cisco
+
+enable secret class
+
+int fa0/0
+ip address 10.0.0.1 255.255.255.0
+no shut
+
+int fa0/1
+ip address 10.0.1.1 255.255.255.128
+no shut
+end
+write memory
+
+!configurar as interfaces serial Router 0
+en
+conf term
+int Se0/1/0
+ip add 10.0.2.97 255.255.255.252
+no shut
+end
+write memory
+
+!configurar o OSPF no router0
+en
+configure terminal
+router ospf 1
+network 10.0.0.0 0.0.0.255 area 0
+network 10.0.1.0 0.0.0.127 area 0
+network 10.0.2.96 0.0.0.3 area 0
+end
+write memory
+
+
+!colocar em modo passivo 
+en
+conf term
+route ospf 1
+passive-interface Fa0/0
+end
+
+
+!configurar a rota por defeito
+en
+conf term
+ip route 0.0.0.0 0.0.0.0 [ip do proximo salto]
+end
+
+
