@@ -1,0 +1,249 @@
+VLAN 10 - Alunos
+172.17.10.0/24
+
+VLAN 20 - Docentes
+172.17.20.0/24
+
+VLAN 30 - Funcionarios
+172.17.30.0/24
+
+VLAN 99 - Gestão - VLAN Nativa 
+172.17.99.0/24
+
+Endereço IP na VLAN de gestão:
+S0: 192.168.99.10/24
+S1: 192.168.99.11/24
+S2: 192.168.99.12/24
+
+!nome do switch0
+en
+conf term
+hostname S0
+
+!nome do switch1
+en
+conf term
+hostname S1
+
+!nome do switch2
+en
+conf term
+hostname S2
+
+
+!desligar todas as portas
+interface range fastEthernet 0/1 - 24
+shutdown
+exit
+
+!configurar endereco de gestao S0
+en
+conf term
+interface vlan 99
+ip add 192.168.99.10 255.255.255.0
+no shut
+exit
+
+!configurar endereco de gestao S1
+en
+conf term
+interface vlan 99
+ip add 192.168.99.11 255.255.255.0
+no shut
+exit
+
+!configurar endereco de gestao S2
+en
+conf term
+interface vlan 99
+ip add 192.168.99.12 255.255.255.0
+no shut
+exit
+
+!ativar password enable
+line console 0
+password cisco
+
+enable secret class
+
+!desabilitar pesquisa dns
+no ip domain-lookup
+
+!configurar senha de conexoes remotas
+line vty 0 4
+password cisco
+login
+exit
+
+!criar as vlans no S0
+en 
+conf term
+vlan 10
+name Alunos
+vlan 20
+name Docentes
+vlan 30
+name Funcionarios
+vlan 99
+name Gestao
+exit
+
+!s0 como VTP Server
+vtp mode server
+vtp domain UTAD
+vtp password cisco
+
+!s1 VTP Transparente
+vtp mode transparent
+vtp domain UTAD
+vtp password cisco
+
+!s2 VTP Client
+vtp mode clientVLAN 10 - Alunos
+172.17.10.0/24
+
+VLAN 20 - Docentes
+172.17.20.0/24
+
+VLAN 30 - Funcionarios
+172.17.30.0/24
+
+VLAN 99 - Gestão - VLAN Nativa 
+172.17.99.0/24
+
+Endereço IP na VLAN de gestão:
+S0: 192.168.99.10/24
+S1: 192.168.99.11/24
+S2: 192.168.99.12/24
+
+!nome do switch0
+en
+conf term
+hostname S0
+
+!nome do switch1
+en
+conf term
+hostname S1
+
+!nome do switch2
+en
+conf term
+hostname S2
+
+
+!desligar todas as portas
+interface range fastEthernet 0/1 - 24
+shutdown
+exit
+
+!configurar endereco de gestao S0
+en
+conf term
+interface vlan 99
+ip add 192.168.99.10 255.255.255.0
+no shut
+exit
+
+!configurar endereco de gestao S1
+en
+conf term
+interface vlan 99
+ip add 192.168.99.11 255.255.255.0
+no shut
+exit
+
+!configurar endereco de gestao S2
+en
+conf term
+interface vlan 99
+ip add 192.168.99.12 255.255.255.0
+no shut
+exit
+
+!ativar password enable
+line console 0
+password cisco
+
+enable secret class
+
+!desabilitar pesquisa dns
+no ip domain-lookup
+
+!configurar senha de conexoes remotas
+line vty 0 4
+password cisco
+login
+exit
+
+!criar as vlans no S0
+en 
+conf term
+vlan 10
+name Alunos
+vlan 20
+name Docentes
+vlan 30
+name Funcionarios
+vlan 99
+name Gestao
+exit
+
+!s0 como VTP Server
+vtp mode server
+vtp domain UTAD
+vtp password cisco
+
+!s1 VTP Transparente
+vtp mode transparent
+vtp domain UTAD
+vtp password cisco
+
+!s2 VTP Client
+vtp mode client
+vtp domain UTAD
+vtp password cisco
+
+!ativar linhas trunk
+interface range fastEthernet 0/1 - 2
+switchport mode trunk
+switchport trunk native vlan 99
+exit
+
+!verificar configuracoes de trunk
+show interfaces trunk
+
+
+!configurar seguranca na porta dos swicths
+en
+conf term
+interface fastEthernet 0/18
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+exit
+vtp domain UTAD
+vtp password cisco
+
+!ativar linhas trunk
+interface range fastEthernet 0/1 - 2
+switchport mode trunk
+switchport trunk native vlan 99
+exit
+
+!verificar configuracoes de trunk
+show interfaces trunk
+
+
+!configurar seguranca na porta dos swicths
+en
+conf term
+interface fastEthernet 0/18
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+exit
