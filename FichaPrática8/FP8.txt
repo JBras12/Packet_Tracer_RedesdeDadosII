@@ -1,0 +1,198 @@
+
+Rede A
+172.31.1.96/27
+Rede B
+194.168.10.0/30
+Rede C
+192.168.1.0/24
+
+PC1: 172.31.1.101 /27
+PC2: 172.31.1.102 /27
+PC3: 172.31.1.103 /27
+
+Server1: 192.168.1.10 /24
+Server2: 192.168.1.20 /24
+
+a. Entre em modo de execução privilegiada
+en
+
+b. Entre em modo de configuração.
+conf term
+
+c. Altere o nome dos equipamentos. 
+hostname R0
+
+d. Ative as passwords de consola dos routers e switches. Utilize a password 'cisco'.
+line console 0
+password cisco
+
+e. Ative também a password de enable. Utilize ‘class’
+enable secret class
+
+f. Desabilite a pesquisa DNS. 
+no ip domain-lookup
+
+g. Configure a senha cisco para as conexões vty. 
+line vty 0 4 
+password cisco
+exit
+
+h. Desligue todas as portas que não estão a ser utilizadas no Switch0. 
+interface range fastEthernet 0/5 - 24
+shutdown
+exit
+
+i. Configure as interfaces dos equipamentos com os IPs adequados.
+en
+conf term
+int fa0/1
+ip add [ip] [mascara]
+no shut
+
+j. Configure a Clock rate 56000 em ambos os routers.
+interface serial 0/0/0
+clock rate 56000
+exit
+
+
+k. Configure a segurança de porta no Switch0 da camada de acesso. Configure as
+portas Fa0/1 e Fa0/2 para que elas permitam apenas um host único e aprendam o
+endereço MAC do host dinamicamente. Caso seja identificado um evento de segurança a
+porta deve ser desligada. 
+int fa0/1
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+exit
+
+interface fa0/2
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+exit
+
+! Verificar 
+show mac-address-table 
+show port-security interface Fa0/2
+show port-security 
+
+!!! Caso seja necessario podemos limpar os mac já gravados 
+clear mac address-table 
+clear port-security sticky
+
+
+m. Configure R1 e R2 para utilizar o protocolo RIPv2.
+!R1
+en
+conf term
+router rip
+version 2
+network 172.31.1.96
+network 194.168.10.0
+
+!R2
+en
+conf term
+router rip
+version 2
+network 192.168.1.0
+network 194.168.10.0
+
+o. Configure e teste ACLs de modo a que o PC3 não consiga comunicar com os
+Servidores. Aplique a lista construída à interface mais adequada. 
+! Aplicar ACL no R1 para bloquear com PC3 aos Servidores
+access-list 100 deny ip host 172.31.1.103 192.168.1.0 0.0.0.255
+access-list 100 permit ip any any
+interface gig0/0
+ip access-group 100 in
+
+
+
+p. Configure e teste ACLs de modo a que o PC1 não consiga efectuar TELNET para a
+interface série do R1, mas permita que o PC1 o faça para a interface Gig0/0 de R1.
+Aplique a ACL no local mais adequado. 
+ access-list 101 deny tcp host 172.31.1.101 any eq 23
+ access-list 101 permit ip any any
+ interface s0/0/0
+ ip access-group 101 in
+
+
+q. Configure e teste ACLs de modo a que a sub-rede dos Servidores não recebam pings
+de outras sub-redes mas sim da própria sub-rede
+access-list 102 deny icmp 192.168.1.0 0.0.0.255 any
+access-list 102 permit ip any any
+interface gig0/1
+ip access-group 102 in
+
+
+
+r. Configure e teste ACLs de modo a que apenas seja possível a saída de tráfego
+proveniente dos Servidores 1 e 2 da sub-rede onde eles se encontram.
+access-list 103 permit ip 192.168.1.0 0.0.0.255 any
+access-list 103 deny ip any any
+interface gig0/1
+ip access-group 103 out
+
+
+s. Configure e teste ACLs de modo a bloquear o acesso HTTP e HTTPS do PC1 ao
+Servidor 2.
+access-list 104 deny tcp host 172.31.1.101 host 192.168.1.10 eq 80
+access-list 104 deny tcp host 172.31.1.101 host 192.168.1.10 eq 443
+access-list 104 permit ip any any
+interface gig0/0
+ip access-group 104 in
+
+
+t. Configure e teste ACLs de modo a permitir tráfego UDP do PC2 ao Servidor 2 mas
+não do PC1
+ access-list 105 permit udp host 172.31.1.102 host 192.168.1.10
+ access-list 105 deny udp host 172.31.1.101 host 192.168.1.10
+ access-list 105 permit ip any any interface gig0/0
+ ip access-group 105 in
+
+
+u. Configure e teste ACLs de modo a permitir o acesso FTP ao Servidor 1 do PC1 mas
+não do PC2.
+ access-list 106 permit tcp host 172.31.1.101 host 192.168.1.20 eq 21
+ access-list 106 deny tcp host 172.31.1.102 host 192.168.1.20 eq 21
+ access-list 106 permit ip any any
+ interface gig0/0
+ ip access-group 106 in
+
+
+v. Configure e teste ACLs de modo a bloquear tráfego TCP do PC1 ao Servidor 1
+ access-list 107 deny tcp host 172.31.1.101 host 192.168.1.20
+ access-list 107 permit ip any any
+ interface gig0/0
+ ip access-group 107 in
+
+
+w. Continua a conseguir utilizador o FTP do Servidor 1 a partir do PC1? Porque?
+A ACL segue as regras definidas na configuração:
+Se uma regra explícita bloqueia o tráfego, ela é aplicada antes de qualquer outra.
+Se não houver uma regra permitindo FTP antes de um bloqueio geral de TCP, o FTP será bloqueado.
+
+x. Configure e teste ACLs de modo a negar todo o tráfego de entrada e saída da subrede dos servidor relativo ao TELNET e permita o tráfego relativo ao SSH, efetuando o
+log.
+access-list 108 deny tcp any any eq 23 log
+access-list 108 permit tcp any any eq 22 log
+access-list 108 deny ip any any
+interface gig0/0
+ip access-group 108 in
+
+
+
+
+
+
+
+
+
+
+
+
+
